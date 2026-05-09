@@ -59,7 +59,7 @@ export const incrementClicks = async (docId) => {
 };
 
 export const updateFullLink = async (docId, newUrl, newShortCode, currentShortCode) => {
-  /* Comentado para teste de permissão
+  // Se o código mudou, precisamos verificar se o novo já existe
   if (newShortCode !== currentShortCode) {
     const linksRef = collection(db, 'links');
     const q = query(linksRef, where('shortCode', '==', newShortCode));
@@ -69,7 +69,6 @@ export const updateFullLink = async (docId, newUrl, newShortCode, currentShortCo
       throw new Error('Este código já está em uso. Escolha outro!');
     }
   }
-  */
 
   const linkRef = doc(db, 'links', docId);
   await updateDoc(linkRef, {

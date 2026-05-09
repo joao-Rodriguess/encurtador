@@ -1,12 +1,12 @@
 import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBIR7xxSTUXiePXMIgWyksZmEjkUPReN0A",
-  authDomain: "encurtador-senai-tds26.firebaseapp.com",
-  projectId: "encurtador-senai-tds26",
-  storageBucket: "encurtador-senai-tds26.firebasestorage.app",
-  messagingSenderId: "1022128347643",
-  appId: "1:1022128347643:web:2cd4f533458b2a89a9135e"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 export const app = initializeApp(firebaseConfig);
