@@ -2,17 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /links/{linkId} {
-      // Leitura pública (para redirecionamento funcionar sem login)
-      allow read: if true;
-      // Criação: apenas usuários autenticados, e o userId deve bater com o dono
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      // Atualização: qualquer um pode incrementar cliques OU o dono pode editar tudo
-      allow update: if 
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks'])) 
-        || 
-        (request.auth != null && resource.data.userId == request.auth.uid);
-      // Exclusão: apenas o dono do link
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // ABERTO TOTALMENTE PARA TESTE DE CONEXÃO
+      allow read, write: if true;
     }
   }
 }
