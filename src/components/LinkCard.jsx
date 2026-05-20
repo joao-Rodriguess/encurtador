@@ -63,6 +63,28 @@ const LinkCard = ({ link }) => {
         <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
           {shortUrl.replace(/^https?:\/\//, '')}
         </a>
+
+        {link.tags && link.tags.length > 0 && (
+          <div className="card-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '0.25rem 0 0.5rem 0' }}>
+            {link.tags.map((tag, idx) => (
+              <span 
+                key={idx} 
+                className="tag-chip" 
+                style={{ 
+                  backgroundColor: 'rgba(99, 102, 241, 0.1)', 
+                  color: '#818cf8', 
+                  fontSize: '0.75rem', 
+                  padding: '0.25rem 0.625rem', 
+                  borderRadius: '100px', 
+                  border: '1px solid rgba(99, 102, 241, 0.2)',
+                  fontWeight: 500
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         
         <div className="card-footer">
           <div className="card-stats">

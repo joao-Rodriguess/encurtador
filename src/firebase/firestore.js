@@ -3,7 +3,7 @@ import { app } from './config';
 
 export const db = getFirestore(app);
 
-export const createShortLink = async (userId, originalUrl) => {
+export const createShortLink = async (userId, originalUrl, tags = []) => {
   // Generate 6 chars random code
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let shortCode = '';
@@ -33,7 +33,8 @@ export const createShortLink = async (userId, originalUrl) => {
     originalUrl,
     shortCode,
     createdAt: serverTimestamp(),
-    clicks: 0
+    clicks: 0,
+    tags
   });
 
   return shortCode;
@@ -58,7 +59,7 @@ export const incrementClicks = async (docId) => {
   });
 };
 
-export const updateFullLink = async (docId, newUrl, newShortCode, currentShortCode) => {
+export const updateFullLink = async (docId, newUrl, newShortCode, currentShortCode, tags = []) => {
   /* Comentado para teste de permissão
   if (newShortCode !== currentShortCode) {
     const linksRef = collection(db, 'links');
@@ -74,7 +75,8 @@ export const updateFullLink = async (docId, newUrl, newShortCode, currentShortCo
   const linkRef = doc(db, 'links', docId);
   await updateDoc(linkRef, {
     originalUrl: newUrl,
-    shortCode: newShortCode
+    shortCode: newShortCode,
+    tags
   });
 };
 

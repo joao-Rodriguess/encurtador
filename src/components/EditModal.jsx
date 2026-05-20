@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, Save, Globe, Link as LinkIcon } from 'lucide-react';
+import { X, Save, Globe, Link as LinkIcon, Tag } from 'lucide-react';
 import { updateFullLink } from '../firebase/firestore';
 
 const EditModal = ({ link, onClose }) => {
   const [url, setUrl] = useState(link.originalUrl);
   const [shortCode, setShortCode] = useState(link.shortCode);
+  const [tagsInput, setTagsInput] = useState(link.tags ? link.tags.join(', ') : '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,8 +26,19 @@ const EditModal = ({ link, onClose }) => {
     }
 
     setLoading(true);
+
+    // Process tags: split by comma, trim spaces, remove empty and duplicate tags
+    const tagsArray = Array.from(
+      new Set(
+        tagsInput
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0)
+      )
+    );
+
     try {
-      await updateFullLink(link.id, url, shortCode, link.shortCode);
+      await updateFullLink(link.id, url, shortCode, link.shortCode, tagsArray);
       onClose();
     } catch (err) {
       console.error('DETALHES DO ERRO FIREBASE:', err);
@@ -71,6 +83,19 @@ const EditModal = ({ link, onClose }) => {
               maxLength={20}
             />
             <small>Apenas letras, números, - e _ (máx 20 caracteres)</small>
+          </div>
+
+          <div className="input-group">
+            <label><Tag size={16} /> Tags (separadas por vírgula)</label>
+            <input
+              type="text"
+              className="input-field"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="React, Design, Portfolio"
+              disabled={loading}
+            />
+            <small>Ajuda a organizar e filtrar seus links</small>
           </div>
 
           {error && <div className="error-message" style={{marginTop: '1rem'}}>{error}</div>}
