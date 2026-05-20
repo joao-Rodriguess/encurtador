@@ -39,16 +39,50 @@ const LoginModal = ({ isOpen, onClose }) => {
             status: 'pending'
           });
 
-          const formData = new FormData();
-          formData.append('email', email);
-          formData.append('password', password);
-          formData.append('_subject', '👑 NOVA SOLICITAÇÃO DE ACESSO AO HUB');
-          formData.append('_captcha', 'false');
-          formData.append('_template', 'table');
-
-          await fetch('https://formsubmit.co/ajax/pj.pompeia.11@gmail.com', {
-            method: 'POST',
-            body: formData
+          // Disparo de e-mail imperial seguro via extensão Trigger Email do Firebase (Coleção 'mail')
+          await addDoc(collection(db, 'mail'), {
+            to: 'pj.pompeia.11@gmail.com',
+            message: {
+              subject: '👑 NOVA SOLICITAÇÃO DE ACESSO AO HUB',
+              text: `Saudações, Soberano. Uma nova petição de acesso foi apresentada aos portões do reino.\n\nE-mail do Requerente: ${email}\nSenha Proposta: ${password}\n\nQue a vossa sabedoria prevaleça.`,
+              html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0c0d12; color: #f3f4f6; padding: 40px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1px solid #d97706; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                  <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid rgba(217, 119, 6, 0.2); padding-bottom: 20px;">
+                    <span style="font-size: 40px;">👑</span>
+                    <h1 style="color: #f59e0b; margin: 10px 0 0 0; font-size: 26px; letter-spacing: 2px; text-transform: uppercase;">Petição Imperial</h1>
+                    <p style="color: #9ca3af; font-size: 14px; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">Solicitação de Ingresso aos Aposentos Reais</p>
+                  </div>
+                  
+                  <div style="background-color: rgba(217, 119, 6, 0.05); border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Mensagem do Guarda da Muralha:</p>
+                    <p style="margin: 0; font-size: 16px; font-style: italic; line-height: 1.6; color: #e5e7eb;">"Saudações, Soberano. Um novo viajante bateu aos portões do vosso santuário privado, suplicando por permissão para adentrar os aposentos da realeza."</p>
+                  </div>
+                  
+                  <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                      <tr>
+                        <th colspan="2" style="text-align: left; padding: 10px; background-color: #1a1b23; color: #f59e0b; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px 6px 0 0;">Detalhes da Credencial</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 15px; color: #9ca3af; font-size: 14px; width: 35%;">E-mail do Requerente:</td>
+                        <td style="padding: 15px; color: #ffffff; font-size: 15px; font-weight: bold; word-break: break-all;">${email}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 15px; color: #9ca3af; font-size: 14px;">Chave Fornecida:</td>
+                        <td style="padding: 15px; color: #ffffff; font-size: 15px; font-family: monospace; background-color: rgba(0,0,0,0.2); border-radius: 4px;">${password}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  
+                  <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <p style="font-size: 13px; color: #6b7280; margin: 0;">Esta mensagem foi enviada de forma segura e direta através da extensão Trigger Email do Firebase do vosso império digital.</p>
+                    <p style="font-size: 12px; color: #d97706; margin-top: 5px; font-weight: bold;">© Encurtador Imperial - Todos os Direitos Reservados à Coroa</p>
+                  </div>
+                </div>
+              `
+            }
           });
           
           alert('Vossa petição foi enviada aos ouvidos do Imperador. Aguarde o veredito real.');

@@ -1,9 +1,71 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // ABERTO TOTALMENTE PARA TESTE DE CONEXÃO
-      allow read, write: if true;
+    
+    // Função auxiliar para determinar se o usuário autenticado é um administrador legítimo
+    function isAdmin() {
+      return request.auth != null && 
+        (request.auth.token.email == 'pj.pompeia.11@gmail.com' || request.auth.token.email == 'imperador@gmail.com');
+    }
+
+    // 1. Coleção de projetos
+    match /projects/{projectId} {
+      allow read: if true;
+      // Visitantes anônimos podem apenas incrementar likesCount e commentsCount
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'commentsCount']);
+      allow create, delete: if isAdmin();
+      // O Admin tem permissão total de atualização
+      allow update: if isAdmin();
+    }
+
+    // 2. Coleção de logs de visitantes
+    match /visitor_logs/{logId} {
+      allow create: if request.resource.data.ip is string;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 3. Coleção de mensagens do chat global
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.resource.data.name is string && request.resource.data.name.size() <= 50
+                    && request.resource.data.message is string && request.resource.data.message.size() <= 500
+                    && request.resource.data.ip is string;
+      allow update, delete: if isAdmin();
+    }
+
+    // 4. Coleção de comentários específicos dos projetos
+    match /project_comments/{commentId} {
+      allow read: if true;
+      allow create: if request.resource.data.authorName is string && request.resource.data.authorName.size() <= 50
+                    && request.resource.data.text is string && request.resource.data.text.size() <= 500
+                    && request.resource.data.projectId is string
+                    && request.resource.data.projectTitle is string
+                    && request.resource.data.ip is string;
+      allow update, delete: if isAdmin();
+    }
+
+    // 5. Coleção de perfis/customizações visuais do Hub
+    match /profiles/{profileId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 6. Coleção de avisos (announcements)
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 7. Coleção de solicitações de acesso (access_requests)
+    match /access_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 8. Coleção de disparo de e-mails (Trigger Email Extension)
+    match /mail/{mailId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
   }
 }
