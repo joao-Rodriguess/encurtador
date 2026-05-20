@@ -3,21 +3,21 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthGuard from './components/AuthGuard';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import RedirectPage from './pages/RedirectPage';
+import HubPage from './pages/HubPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota pública de redirecionamento */}
-        <Route path="/r/:code" element={<RedirectPage />} />
+        {/* Rota pública do Hub / Portfólio */}
+        <Route path="/" element={<HubPage />} />
         
         {/* Rota de login */}
         <Route path="/login" element={<LoginPage />} />
         
-        {/* Rotas protegidas */}
+        {/* Rotas protegidas (Admin) */}
         <Route element={<AuthGuard />}>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/admin" element={<DashboardPage />} />
         </Route>
 
         {/* Fallback */}
