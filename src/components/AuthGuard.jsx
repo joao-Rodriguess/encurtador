@@ -24,7 +24,10 @@ const AuthGuard = () => {
     );
   }
 
-  if (!user) {
+  const ADMIN_EMAILS = ['pj.pompeia.11@gmail.com', 'imperador@gmail.com'];
+  const isAdmin = user && (ADMIN_EMAILS.includes(user.email) || user.email === 'imperador@gmail.com');
+
+  if (!user || !isAdmin) {
     return <Navigate to="/login" replace />;
   }
 

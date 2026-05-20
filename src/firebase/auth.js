@@ -1,7 +1,8 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { app } from './config';
 
 export const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence); // Garante que a sessão permaneça logada localmente
 const googleProvider = new GoogleAuthProvider();
 
 export const loginWithEmail = (email, password) => {
