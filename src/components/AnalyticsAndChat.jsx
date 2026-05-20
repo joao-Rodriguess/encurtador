@@ -16,6 +16,7 @@ const AnalyticsAndChat = () => {
   const [activeSubTab, setActiveSubTab] = useState('analytics'); // 'analytics', 'moderation' or 'project_comments'
   const [deletingId, setDeletingId] = useState(null);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [visitorViewMode, setVisitorViewMode] = useState('grouped'); // 'grouped' ou 'all'
 
   // Subscrever aos logs de visitantes, comentários globais e de projetos
   useEffect(() => {
@@ -140,6 +141,32 @@ const AnalyticsAndChat = () => {
 
   const pathDUnique = pointsUnique.reduce((acc, p, i) => i === 0 ? `M ${p.x},${p.y}` : `${acc} L ${p.x},${p.y}`, '');
   const areaDUnique = pointsUnique.length > 0 ? `M 55,195 ${pointsUnique.reduce((acc, p) => `${acc} L ${p.x},${p.y}`, '')} L ${pointsUnique[pointsUnique.length - 1].x},195 Z` : '';
+
+  // Agrupamento de estatísticas por visitante único (IP distinto)
+  const uniqueVisitorStats = React.useMemo(() => {
+    const statsMap = {};
+    
+    logs.forEach(log => {
+      if (!log.ip) return;
+      
+      if (!statsMap[log.ip]) {
+        statsMap[log.ip] = {
+          ip: log.ip,
+          totalViews: 0,
+          latestLog: log
+        };
+      }
+      
+      statsMap[log.ip].totalViews += 1;
+    });
+    
+    // Ordenar pelo acesso mais recente
+    return Object.values(statsMap).sort((a, b) => {
+      const timeA = a.latestLog.timestamp?.toDate ? a.latestLog.timestamp.toDate() : new Date(a.latestLog.timestamp || 0);
+      const timeB = b.latestLog.timestamp?.toDate ? b.latestLog.timestamp.toDate() : new Date(b.latestLog.timestamp || 0);
+      return timeB - timeA;
+    });
+  }, [logs]);
 
   const parseUA = (ua) => {
     if (!ua) return 'Outro / Desconhecido';
@@ -469,58 +496,154 @@ const AnalyticsAndChat = () => {
 
               {/* Tabela de Acessos Recentes */}
               <div className="space-y-4 pt-2">
-                <h4 className="text-sm font-black text-white uppercase tracking-wider px-1">Fluxo de Visitas Recentes</h4>
-              <div className="glass-panel rounded-2xl border border-white/5 bg-[#0f0f18]/30 overflow-hidden shadow-xl">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-white/5 border-b border-white/5 text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400">
-                        <th className="py-3 px-4">Endereço IP</th>
-                        <th className="py-3 px-4">Localização / Provedor</th>
-                        <th className="py-3 px-4">Plataforma</th>
-                        <th className="py-3 px-4 text-right">Data/Hora</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-xs md:text-sm text-gray-300">
-                      {logs.length === 0 ? (
-                        <tr>
-                          <td colSpan="4" className="py-8 text-center text-gray-600 text-xs">
-                            Nenhum registro de acesso detectado.
-                          </td>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <Users size={16} className="text-amber-500" />
+                    <span>Fluxo de Visitas Recentes</span>
+                  </h4>
+                  <div className="flex items-center gap-1 bg-[#09090e]/80 border border-white/5 p-1 rounded-xl">
+                    <button
+                      onClick={() => setVisitorViewMode('grouped')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                        visitorViewMode === 'grouped'
+                          ? 'bg-amber-500 text-[#07070a] shadow-lg font-black'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Users size={12} />
+                      <span>Visitantes Únicos ({uniqueVisitorStats.length})</span>
+                    </button>
+                    <button
+                      onClick={() => setVisitorViewMode('all')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                        visitorViewMode === 'all'
+                          ? 'bg-amber-500 text-[#07070a] shadow-lg font-black'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Eye size={12} />
+                      <span>Visualização Total ({logs.length})</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="glass-panel rounded-2xl border border-white/5 bg-[#0f0f18]/30 overflow-hidden shadow-xl">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-white/5 border-b border-white/5 text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400">
+                          <th className="py-3 px-4">Visitante (IP)</th>
+                          <th className="py-3 px-4 text-center">
+                            {visitorViewMode === 'grouped' ? 'Visualizações Totais' : 'Situação / Evento'}
+                          </th>
+                          <th className="py-3 px-4">Localização / Provedor</th>
+                          <th className="py-3 px-4">
+                            {visitorViewMode === 'grouped' ? 'Última Plataforma' : 'Plataforma'}
+                          </th>
+                          <th className="py-3 px-4 text-right">
+                            {visitorViewMode === 'grouped' ? 'Último Acesso' : 'Horário de Conexão'}
+                          </th>
                         </tr>
-                      ) : (
-                        logs.slice(0, 15).map((log) => (
-                          <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="py-3 px-4 font-mono text-[11px] md:text-xs text-amber-500/80 font-bold">{log.ip}</td>
-                            <td className="py-3 px-4">
-                              <div className="flex flex-col">
-                                <span className="flex items-center gap-1.5 font-bold text-white text-[11px] md:text-xs">
-                                  <Globe size={10} className="text-gray-500" />
-                                  {log.city || 'Desconhecida'}, {log.country || 'Desconhecido'}
-                                </span>
-                                <span className="text-[9px] text-gray-600 truncate max-w-[180px]">{log.org || 'Provedor Desconhecido'}</span>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="flex items-center gap-1.5 text-[10px] md:text-xs text-gray-400">
-                                <Laptop size={11} className="text-gray-600" />
-                                {parseUA(log.userAgent)}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="flex items-center justify-end gap-1 text-[10px] md:text-xs text-gray-500 font-mono">
-                                <Clock size={10} />
-                                {formatDate(log.timestamp)}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-xs md:text-sm text-gray-300">
+                        {visitorViewMode === 'grouped' ? (
+                          uniqueVisitorStats.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="py-8 text-center text-gray-600 text-xs">
+                                Nenhum visitante único detectado.
+                              </td>
+                            </tr>
+                          ) : (
+                            uniqueVisitorStats.slice(0, 15).map((stat) => {
+                              const { ip, totalViews, latestLog } = stat;
+                              return (
+                                <tr key={ip} className="hover:bg-white/[0.02] transition-colors">
+                                  <td className="py-3 px-4 font-mono text-[11px] md:text-xs text-amber-500/80 font-bold">{ip}</td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                      {totalViews} {totalViews === 1 ? 'acesso' : 'acessos'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex flex-col">
+                                      <span className="flex items-center gap-1.5 font-bold text-white text-[11px] md:text-xs">
+                                        <Globe size={10} className="text-gray-500" />
+                                        {latestLog.city || 'Desconhecida'}, {latestLog.country || 'Desconhecido'}
+                                      </span>
+                                      <span className="text-[9px] text-gray-600 truncate max-w-[180px]">{latestLog.org || 'Provedor Desconhecido'}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="flex items-center gap-1.5 text-[10px] md:text-xs text-gray-400">
+                                      <Laptop size={11} className="text-gray-600" />
+                                      {parseUA(latestLog.userAgent)}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <span className="flex items-center justify-end gap-1 text-[10px] md:text-xs text-gray-500 font-mono">
+                                      <Clock size={10} />
+                                      {formatDate(latestLog.timestamp)}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )
+                        ) : (
+                          logs.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="py-8 text-center text-gray-600 text-xs">
+                                Nenhum log de acesso geral encontrado.
+                              </td>
+                            </tr>
+                          ) : (
+                            logs.slice(0, 50).map((log, index) => {
+                              return (
+                                <tr key={log.id || index} className="hover:bg-white/[0.02] transition-colors">
+                                  <td className="py-3 px-4 font-mono text-[11px] md:text-xs text-amber-500/80 font-bold">{log.ip || 'Desconhecido'}</td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                      Conexão Registrada
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex flex-col">
+                                      <span className="flex items-center gap-1.5 font-bold text-white text-[11px] md:text-xs">
+                                        <Globe size={10} className="text-gray-500" />
+                                        {log.city || 'Desconhecida'}, {log.country || 'Desconhecido'}
+                                      </span>
+                                      <span className="text-[9px] text-gray-600 truncate max-w-[180px]">{log.org || 'Provedor Desconhecido'}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="flex items-center gap-1.5 text-[10px] md:text-xs text-gray-400">
+                                      <Laptop size={11} className="text-gray-600" />
+                                      {parseUA(log.userAgent)}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <span className="flex items-center justify-end gap-1 text-[10px] md:text-xs text-gray-500 font-mono">
+                                      <Clock size={10} />
+                                      {formatDate(log.timestamp)}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  {visitorViewMode === 'all' && logs.length > 50 && (
+                    <div className="py-2.5 px-4 bg-white/[0.02] border-t border-white/5 text-center">
+                      <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                        Exibindo os últimos 50 acessos do fluxo em tempo real. Total de registros: {logs.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
           </div>
 
             {/* Quadro de Origem (Widget de Países) */}
